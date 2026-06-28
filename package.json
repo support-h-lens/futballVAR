@@ -1,0 +1,10 @@
+{
+  "name": "padelvar-rtsp",
+  "version": "1.0.0",
+  "description": "Portable instant-replay: pull a camera RTSP stream into a rolling 30s buffer and replay the last 30s on a button press. No internet streaming.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.19.2" }
+}

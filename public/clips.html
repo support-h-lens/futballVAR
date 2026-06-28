@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>1/2 Lens VAR — Clips</title>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#0c1a2b" />
+<link rel="stylesheet" href="/theme.css" />
+<style>
+  .wrap{max-width:1120px;margin:0 auto;padding:22px 22px 64px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}
+  .bar{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+  .bar .count{font-weight:600;color:var(--muted);font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+  .clip{overflow:hidden}
+  .clip video{width:100%;aspect-ratio:16/9;object-fit:cover;background:#0b1622;display:block}
+  .meta{padding:14px 16px 4px}
+  .meta .t{font-weight:600;font-size:14px;letter-spacing:-.01em}
+  .meta .s{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .acts{display:flex;gap:8px;padding:12px 16px 16px}
+  .acts a,.acts button{flex:1;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;
+    font-family:inherit;font-weight:600;font-size:12.5px;padding:9px;text-decoration:none;text-align:center;transition:.15s}
+  .acts a:hover,.acts button:hover{border-color:#d8dee5}
+  .empty{text-align:center;color:var(--muted);padding:90px 20px}
+  .empty h2{color:var(--ink);font-weight:650;letter-spacing:-.02em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brandmark">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="12.6" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M16 3.4a12.6 12.6 0 0 0 0 25.2z" fill="currentColor"/>
+        <circle cx="16" cy="16" r="3.5" fill="var(--surface)"/>
+      </svg>
+      <div class="brandtext"><h1>1/2 Lens VAR</h1><span>Clips</span></div>
+    </div>
+    <a class="btn btn-primary" href="/">Replay</a>
+  </div>
+  <div class="bar"><button class="btn" id="refresh">Refresh</button><span class="count" id="count"></span></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none"><h2>No clips yet</h2><p>Tap Replay on the main screen and your saved clips will appear here.</p></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  var grid=document.getElementById('grid'),empty=document.getElementById('empty'),count=document.getElementById('count'),toast=document.getElementById('toast');
+  function showToast(m){toast.textContent=m;toast.classList.add('show');clearTimeout(showToast._t);showToast._t=setTimeout(function(){toast.classList.remove('show')},2200);}
+  function fmt(ms){return new Date(ms).toLocaleString();}
+  var seen='';
+  async function load(){
+    var list; try{ list=await(await fetch('/api/clips')).json(); }catch(e){ return; }
+    count.textContent=list.length+' clip'+(list.length===1?'':'s');
+    var sig=list.map(function(c){return c.id}).join(','); if(sig===seen) return; seen=sig;
+    empty.style.display=list.length?'none':'block'; grid.innerHTML='';
+    list.forEach(function(c){
+      var card=document.createElement('div'); card.className='card clip';
+      card.innerHTML='<video preload="metadata" controls playsinline src="'+c.url+'#t=0.1"></video>'+
+        '<div class="meta"><div class="t">Replay</div><div class="s">'+fmt(c.time)+'</div></div>'+
+        '<div class="acts"><a href="'+c.watchUrl+'" target="_blank" rel="noopener">Open</a>'+
+        '<a href="'+c.url+'" download="replay-'+c.id+'.mp4">Save</a>'+
+        '<button data-link="'+location.origin+c.watchUrl+'">Copy link</button></div>';
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('button[data-link]').forEach(function(b){
+      b.addEventListener('click',async function(){ try{ await navigator.clipboard.writeText(b.dataset.link); showToast('Link copied'); }catch(e){} });
+    });
+  }
+  document.getElementById('refresh').addEventListener('click',function(){seen='';load();});
+  load(); setInterval(load,5000);
+</script>
+</body>
+</html>

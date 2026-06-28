@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>1/2 Lens VAR — Replay</title>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#0c1a2b" />
+<link rel="stylesheet" href="/theme.css" />
+<style>
+  .wrap{max-width:960px;margin:0 auto;padding:22px 22px 64px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+  .tag{position:absolute;top:14px;left:14px;background:rgba(12,26,43,.6);backdrop-filter:blur(8px);color:#fff;
+    font-weight:600;padding:7px 13px;border-radius:999px;font-size:12px;letter-spacing:.04em}
+  .row{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .muted{color:var(--muted);font-size:13px;margin-top:16px}
+  .err{text-align:center;color:var(--muted);padding:80px 20px}.err h2{color:var(--ink);font-weight:650;letter-spacing:-.02em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brandmark">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="12.6" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M16 3.4a12.6 12.6 0 0 0 0 25.2z" fill="currentColor"/>
+        <circle cx="16" cy="16" r="3.5" fill="var(--surface)"/>
+      </svg>
+      <div class="brandtext"><h1>1/2 Lens VAR</h1><span>Replay</span></div>
+    </div>
+    <a class="btn" href="/">Open app</a>
+  </div>
+  <div id="player">
+    <div class="stage" style="aspect-ratio:16/9"><span class="tag">REPLAY · last 30s</span><video id="v" playsinline controls autoplay></video></div>
+    <div class="row">
+      <button class="btn btn-primary" id="again">Watch again</button>
+      <a class="btn" id="dl" download="replay.mp4">Save</a>
+    </div>
+    <p class="muted">Shared from a 1/2 Lens VAR court camera.</p>
+  </div>
+  <div id="err" class="err" style="display:none">
+    <h2>Replay not available</h2>
+    <p>This clip may have expired or the link is incorrect.</p>
+    <a class="btn btn-primary" href="/">Open 1/2 Lens VAR</a>
+  </div>
+</div>
+<script>
+  var id=location.pathname.split('/watch/')[1]||'';
+  var src='/replay/clip_'+id+'.mp4', v=document.getElementById('v');
+  document.getElementById('dl').href=src; v.src=src;
+  v.addEventListener('error',function(){document.getElementById('player').style.display='none';document.getElementById('err').style.display='block';});
+  document.getElementById('again').addEventListener('click',function(){v.currentTime=0;v.play();});
+</script>
+</body>
+</html>

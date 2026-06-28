@@ -1,0 +1,7 @@
+{
+  "rtsp": "rtsp://admin:YOURPASSWORD@192.168.1.50:554/cam/realmonitor?channel=1&subtype=0",
+  "port": 4000,
+  "segmentSeconds": 5,
+  "windowSegments": 6,
+  "transcode": false
+}
