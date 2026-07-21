@@ -22,6 +22,9 @@ const TRANSCODE = process.env.TRANSCODE === '1' || cfg.transcode === true;
 // or 'test' (a built-in moving test pattern, no camera needed).
 const SOURCE    = process.env.SOURCE || cfg.source || (RTSP ? 'rtsp' : 'test');
 const HAS_SOURCE = SOURCE === 'webcam' || SOURCE === 'test' || (SOURCE === 'rtsp' && !!RTSP);
+// auto-delete saved clips after this many hours (0 = never). Default: 24h.
+const CLIP_MAX_HOURS = Number(process.env.CLIP_MAX_HOURS != null ? process.env.CLIP_MAX_HOURS
+                             : (cfg.clipMaxHours != null ? cfg.clipMaxHours : 24));
 
 const LIVE = path.join(__dirname, 'live');
 const REPLAY = path.join(__dirname, 'replay');
@@ -135,10 +138,22 @@ function makeReplay(cb) {
   });
 }
 function cleanupReplays() {
-  const mp4s = fs.readdirSync(REPLAY).filter(f => f.endsWith('.mp4'))
-    .map(f => ({ f, t: fs.statSync(path.join(REPLAY, f)).mtimeMs })).sort((a,b)=>b.t-a.t);
-  mp4s.slice(200).forEach(({ f }) => { try { fs.unlinkSync(path.join(REPLAY, f)); } catch (e) {} });  // keep newest 200 clips
+  const now = Date.now();
+  const maxAgeMs = CLIP_MAX_HOURS > 0 ? CLIP_MAX_HOURS * 3600 * 1000 : Infinity;
+  let mp4s = fs.readdirSync(REPLAY).filter(f => f.endsWith('.mp4'))
+    .map(f => ({ f, t: fs.statSync(path.join(REPLAY, f)).mtimeMs }));
+  // 1) delete clips older than CLIP_MAX_HOURS (24h by default)
+  mp4s = mp4s.filter(({ f, t }) => {
+    if (now - t > maxAgeMs) { try { fs.unlinkSync(path.join(REPLAY, f)); } catch (e) {} return false; }
+    return true;
+  });
+  // 2) also cap the total to the newest 200 (safety for very busy days)
+  mp4s.sort((a, b) => b.t - a.t).slice(200)
+    .forEach(({ f }) => { try { fs.unlinkSync(path.join(REPLAY, f)); } catch (e) {} });
 }
+// sweep on start, then every hour — so old clips expire even when no new replays are made
+cleanupReplays();
+setInterval(cleanupReplays, 60 * 60 * 1000);
 
 // (the live monitor frame is now written directly by FFmpeg at ~4 fps — see args above)
 
